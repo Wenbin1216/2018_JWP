@@ -1,4 +1,91 @@
-# Semantic Information / Semantic Annotation [Wenbin Li]
+# Semantic Information / Semantic Annotation [Wenbin Li, Hamza Baqa]
+Existing syntax information can be enriched with semantics and transformed to semantic information via semantic annotation.  Semantic annotation is the process of linking existing syntax information with specific ontologies to provide both machine understandable and human readable descriptions, while the source information can be structured document, services, functions, metadata of image and videos, etc. Ontologies are the interoperable and standard means to provide semantics to existing data and furthermore link different information together via predefined relations. The semantic annotation bridges the gap between syntax and semantics and evolves the existing information for advanced data use and analytics. 
+
+The general semantic process can be briefly summarized into the three following steps 
+1. Preparation of source information to be annotated; 
+2. Identification or definition of ontologies to be used; 
+3. Manual or automatic link between source information to ontologies.
+
+Semantic annotations are widely used in various data-centric domains. Here we present an example following our smart home scenario, in which a room with an energy limit profile is equipped with a temperature sensor providing temperature measurement and a washing machine providing washing machine with states and remote washing services to turn on/off and switch mode. The description of the rooms is serialized in JSON as presented below. 
+
+```
+{	"id": "room1001",
+	"type": "Room",
+	"energyProfile": "/Limit",
+	"devices": [{	"id": "ts001",
+			"type": "TemperatureSensor",
+			"value": "25"},
+		       {	"id": "wm002",
+			"type": "WashingMachine",
+			"state": "/state",
+			"service": /switch"    }]
+}
+```
+
+The JSON description of the Room1001 is the source information to be annotated, and the main ontologies we use for semantic annotation are SAREF and SAREF4ENER, which is introduced in previous chapters.  
+Starting from the general terms, we need to map the general terms “id” and “type” to JSON-LD node identifier and RDF type concept.    
+
+
+```
+	"id": "@id",
+	"type": "rdf:type"
+
+```
+
+so that all ids in the JSON descriptions are defined as an object node with an URI as identifier, while all thing types are further linked as a type of an ontology class. 
+In the following, all type targets in the JSON are mapped to different SAREF4ENER, except that we use the schema ontology to annotate the type of Room which is not defined in SAREF or SAREF4ENER. 
+
+
+```
+  "TemperatureSensor": "saref:TemperatureSensor",
+	"WashingMachine": "saref:WashingMachine",
+	"Room": "schema:Room"
+
+```
+At last, we link the energyProfie, sensingValue, state and services with SAREF and SAREF4ENER concepts, 
+
+```
+"energyProfile":"saref4ener:hasEnergy",
+"/Limit":"saref4ener:energyMax",
+"value":"saref:hasValue",
+"service": "saref:offers",
+"wm002/switch": "saref:Service",
+"state ": "saref:hasState",
+"wm002/state": "saref:State"
+
+```
+At the of the annotation, all terms used in JSON are linked to semantic concepts, for example now we know that the resource "wm002/switch" is a device service defined by SAREF, and the "/Limit" is a resource describing the maximum energy consumption as specified in SAREF4ENER. 
+The final serialization formats of the semantic annotation are rather flexible and can be formatted as with all semantic formats such as triples, JSON-LD, RDF/XML, etc. One convenient way for JSON document is to use JSON-LD to serialize the semantic annotation result, as we only need to add an extra field of “@conext” at the top of existing JSON which contains all previously defined mappings. 
+
+```
+	{	"@context": {
+			"id": "@id",
+			"wm002/state": "saref:State",
+			… …
+		},
+		"id": "room1001",
+		"type": "Room", 
+		… …
+	}
+
+```
+Here follows a sample of semantic annotation result based on triples format, 
+
+```
+Room1001 	rdf:type 		"schema:Room",
+Room1001	saref4ener:hasEnergy 	"/Limit",
+"/Limit" 	rdf:type 		"saref4ener:energyMax",
+… …
+
+```
+Other examples: 
+- Markus Stocker provides an example in his post of representing metadata about the LI-7500 sensing device used for monitoring of CO2 and H2O fluxes. http://markusstocker.com/sensing-devices-and-their-metadata/
+- An example of the SSN-XG sensor ontology used to describe the Vaisala WM30 sensing device which measures wind speed and wind direction. https://www.w3.org/2005/Incubator/ssn/ssnx/meteo/WM30 
+- A typical design of semantic annotation framework can be found in, https://www.researchgate.net/publication/319036946_Towards_a_Semantics_Extractor_for_Interoperability_of_IoT_Platforms
+
+----------------------------------------------------------------------------------------------------------
+
+
 
 This example describes how to represent metadata and observations from a Salinity Sensor sensing device using the Semantic Sensor Network [SSN] (https://www.w3.org/2005/Incubator/ssn/ssnx/ssn) ontology. 
 
@@ -55,4 +142,3 @@ result1time dul:hasRegionDataValue "2018-06-01T09:25:12.010"^^xsd:dateTime
 Other examples: 
 - Markus Stocker provides an example in his post of representing metadata about the LI-7500 sensing device used for monitoring of CO2 and H2O fluxes. http://markusstocker.com/sensing-devices-and-their-metadata/
 - An example of the SSN-XG sensor ontology used to describe the Vaisala WM30 sensing device which measures wind speed and wind direction. https://www.w3.org/2005/Incubator/ssn/ssnx/meteo/WM30 
-
